@@ -218,7 +218,7 @@ function insertDept(newDept) {
 //ADD ROLE
 function addRole() {
     const array = [];
-    getDepartmentsAsync()
+    getDepartAsync()
     .then(data => {
             for (let i=0; i<data.length; i++) {
                 array.push(data[i])
@@ -264,13 +264,13 @@ function addRole() {
             choices: array
         }
     ]).then(answers => {
-        let departmentId;
+        let departId;
         for (let i = 0; i < array.length; i++) {
             if (answers.department === array[i].name) {
-                departmentId = array[i].id;
+                departId = array[i].id;
             }
         }
-        insertRole(answers.title, answers.salary, departmentId);
+        insertRole(answers.title, answers.salary, departId);
     })
 }
 
@@ -533,10 +533,277 @@ function updateEmployeeManager(employeeId, managerId) {
 //--------//
 
 //DELETE EMPLOYEE
+function deleteEmployee() {
+    getEmployeesAsync()
+    .then(data => {
+        const employeesData = [];
+        const employeesNames = [];
+        for (let i = 0; i < data.length; i++) {
+            employeesData.push(data[i]);
+            employeesNames.push(data[i].last_name)
+        }
+        deleteEmployeeQuestions(employeesData, employeesNames)
+    })
+    .catch(err => {
+        console.log(err);
+    })
+}
+
+function deleteEmployeeQuestions(employeesData, employeesNames) {
+    inquirer.prompt([
+        {
+            type: 'list',
+            name: 'name',
+            message: 'Which employee would you like to delete?',
+            choices: employeesNames
+        },
+        {
+            type: 'confirm',
+            name: 'confirm',
+            message: 'Are you sure you would like to delete this employee?'
+        }
+    ]).then(answers => {
+        if (answers.confirm){
+            let employeeId;
+            for (let i = 0; i < employeesData.length; i++) {
+                if (answers.name === employeesData[i].last_name) {
+                    employeeId = employeesData[i].id;
+                }
+            }
+            deleteEmployeeFromDb(employeeId, answers.name);
+        } else {
+            init();
+        }
+    })
+}
+
+function deleteEmployeeFromDb(employeeId, name) {
+    connection.query(`DELETE FROM employee WHERE ?`, {id: employeeId}, (err, res) => {
+        if (err) throw err;
+        console.log(` ${name} has successfully been removed from the database.`);
+        init();
+    })
+}
 
 //DELETE EMPLOYEE ROLE
+function deleteRole() {
+    getRolesAsync()
+    .then(data => {
+        const rolesData = [];
+        const rolesNames = [];
+        for (let i = 0; i < data.length; i++) {
+            rolesData.push(data[i]);
+            rolesNames.push(data[i].role);
+        }
+        deleteRoleQuestions(rolesData, rolesNames);
+    }).catch(err => {
+        console.log(err);
+    })
+}
+
+
+function deleteRoleQuestions(rolesData, rolesNames) {
+    inquirer.prompt([
+        {
+            type: 'list',
+            name: 'name',
+            message: 'Which role would you like to delete?',
+            choices: rolesNames
+        },
+        {
+            type: 'confirm',
+            name: 'confirm',
+            message: 'Are you sure you would like to delete this role?'
+        }
+    ]).then(answers => {
+        if (answers.confirm) {
+            let roleId;
+            for (let i = 0; i < rolesData.length; i++) {
+                if (answers.name === rolesData[i].role) {
+                    roleId = rolesData[i].id;
+                }
+            }
+            deleteRoleFromDb(roleId, answers.name);
+        } else {
+            init();
+        }
+    })
+}
+
+function deleteRoleFromDb(roleId, name) {
+    connection.query(`DELETE FROM employee_role WHERE ?`, {id: roleId}, (err, res) => {
+        if (err) throw err;
+        console.log(` ${name} has been successfully deleted from the database.`);
+        init();
+    })
+}
+
+
 
 //DELETE DEPARTMENT
+function deleteDepart() {
+    const departData = [];
+    const departNames = [];
+    getDepartAsync()
+    .then(data => {
+        for (let i = 0; i < data.length; i++) {
+            departData.push(data[i]);
+            departNames.push(data[i].name);
+        }
+        deleteDepartQuestions(departData, departNames);
+    }).catch(err => {
+        console.log(err);
+    })
+}
+
+function deleteDepartQuestions(departData, departNames) {
+    inquirer.prompt([
+        {
+            type: 'list',
+            name: 'name',
+            message: `Which department would you like to delete?`,
+            choices: departNames
+        },
+        {
+            type: 'confirm',
+            name: 'confirm',
+            message: 'Are you sure?'
+        }
+    ]).then(answers => {
+        if (answers.confirm) {
+            let departId;
+            for (let i = 0; i < departData.length; i++) {
+                if (answers.name === departData[i].name) {
+                    departId = departData[i].id;
+                }
+            }
+            deleteDepartFromDb(departId, answers.name);
+        } else {
+            init();
+        }
+    });
+}
+
+function deleteDepartFromDb(departId, name) {
+    connection.query(`DELETE FROM department WHERE ?`, {id: departId}, (err, res) => {
+        if (err) throw err;
+        console.log(` ${name} has been successfully deleted from the database.`);
+        init();
+    })
+}
 
 
 
+//-----------------//
+// ASYNC FUNCTIONS //
+//-----------------//
+
+function getEmployeesAsync() {
+    return new Promise((resolve, reject) => {
+        connection.query(`SELECT id, last_name FROM employee ORDER BY last_name`, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(data);
+        });
+    });
+}
+
+
+function getRolesAsync() {
+    return new Promise((resolve, reject) => {
+        connection.query(`SELECT id, title AS 'role' FROM employee_roles ORDER BY role`, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(data);
+        });
+    });
+}
+
+
+
+function getDepartAsync() {
+    return new Promise((resolve, reject) => {
+        connection.query(`SELECT * FROM department`, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(data);
+        })
+    })
+}
+
+
+
+//-------------------//
+// DEPT BUDGET QUERY //
+//------------------//
+
+(`SELECT r.salary
+FROM employee e
+JOIN employee_role r
+ON e.role_id = r.id
+JOIN department d
+ON r.department_id = d.id 
+WHERE d.id = 1`)
+
+function viewDepartBudget() {
+    const departData = [];
+    const departNames = [];
+    getDepartAsync()
+    .then(data => {
+        for (let i = 0; i < data.length; i++) {
+            departData.push(data[i]);
+            departNames.push(data[i].name);
+        }
+        viewBudgetQuestions(departData, departNames);
+    }).catch(err => {
+        console.log(err);
+    });
+}
+
+function viewBudgetQuestions(departData, departNames) {
+    inquirer.prompt([
+        {
+            type: 'list',
+            name: 'name',
+            message: 'Which department would you like to see the budget for?',
+            choices: departNames
+        }
+    ]).then(answers => {
+        let departId;
+        for (let i = 0; i < departData.length; i++) {
+            if (answers.name === departData[i].name) {
+                departId = departData[i].id;
+            }
+        }
+        getDepartBudget(departId, answers.name);
+    });
+}
+
+function getDepartBudget(departId, name) {
+    connection.query(`SELECT r.salary
+                      FROM employee e
+                      JOIN employee_role r
+                      ON e.role_id = r.id
+                      JOIN department d
+                      ON r.department_id = d.id 
+                      WHERE ?`, {'d.id': departId}, 
+                      (err, data) => {
+                            if (err) throw err;
+                            calcDepartBudget(data, name);
+                      });
+}
+
+
+function calcDepartBudget(data, name) {
+    let departBudget = 0;
+    for (let i = 0; i < data.length; i++) {
+        departBudget += data[i].salary;
+    }
+    departBudget = departBudget.toFixed(2);
+    departBudget = commaNumber(departBudget);
+    console.log(`\nThe budget for ${name} is $${departBudget}`);
+    init();
+}
