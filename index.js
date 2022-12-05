@@ -45,31 +45,31 @@ function start() {
                     viewEmployees();
                     break;
                 case 'View All Departments' :
-                    viewDepartments();
+                    viewDepart();
                     break;
                 case 'View All Employee Roles' :
-                    viewEmployeeRoles();
+                    viewRoles();
                     break;
                 case 'Add New Department' :
-                    addDepartment();
+                    addDepart();
                     break;
                 case 'Add New Employee' : 
                     addEmployee();
                     break;
                 case 'Add New Employee Role' :
-                    addEmployeeRole();
+                    addRole();
                     break;
                 case 'Change Current Employee Role' :
-                    changeEmployeeRole();
+                    changeRole();
                     break;
                 case 'Delete Department' :
-                    deleteDepartment();
+                    deleteDepart();
                     break;
                 case 'Delete Employee' :
                     deleteEmployee();
                     break;
                 case 'Delete Employee Role' :
-                    deleteEmployeeRole();
+                    deleteRole();
                     break;
 
                 
@@ -81,9 +81,53 @@ function start() {
         });
 };
 
+//------//
+// VIEW //
+//------//
 
+//VIEW ALL ROLES
+function viewRoles() {
+    connection.query(`SELECT r.title AS 'Role', d.name AS 'Department', r.salary AS 'Salary'
+                      FROM roles r
+                      JOIN departments d
+                      ON r.department_id = d.id
+                      ORDER BY r.department_id`, 
+                      (err, res) => {
+                          if (err) throw err;
+                          console.log('\n')
+                          console.table(res);
+                          init();
+                      });
+}
 
+//VIEW ALL DEPARTMENTS
+function viewDepart() {
+    connection.query(`SELECT name AS 'Departments' FROM departments`, (err, res) => {
+        if (err) throw err;
+        console.log('\n')
+        console.table(res);
+        init();
+    });
+}
+//VIEW ALL EMPLOYEES
 
+function viewEmployees() {
+    connection.query(`SELECT employee.id, 
+    employee.first_name, 
+    employee.last_name, 
+    employee_role.title, 
+    department.department_name AS 'department', 
+    employee_role.salary
+    FROM employee, employee_role, department 
+    WHERE department.id = employee_role.department_id 
+    AND employee_role.id = employee.role_id
+    ORDER BY employee.id ASC`, (err, res) => {
+        if (err) throw err;
+        console.log('\n')
+        console.table(res);
+        init();
+    });
+}
 
 //-----------//
 // ADDITIONS //
@@ -133,14 +177,6 @@ function insertDept(newDept) {
 
 //UPDATE EMPLOYEE ROLE
 
-//------//
-// VIEW //
-//------//
 
-//VIEW ALL ROLES
-
-//VIEW ALL DEPARTMENTS
-
-//VIEW ALL EMPLOYEES
 
 
