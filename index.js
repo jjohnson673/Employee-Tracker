@@ -1,22 +1,27 @@
 
 
-const msql = require('mysql');
-const consoleTable = require('console.table');
+const mysql = require('mysql2');
+const cTable = require('console.table');
 const inquirer = require('inquirer');
+const Employee = require(__dirname + '/db/employeeconnect.js')
+const Role = require(__dirname + '/db/employeeconnect.js')
+const Department = require(__dirname + '/db/employeeconnect.js')
 
-const employeeconnect = require(__dirname + '/db/employeeconnect.js')
+
 
 
 //CONNECTIONS
-const db = mysql.createConnection({
+const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: 'password',
+    password: 'UNCChapelHillCoding123!',
     database: 'employeeTracker_db'
 });
 
+startHome();
+
 //Start: What would you like to do....? //
-function start() {
+function startHome() {
     inquirer
         .prompt ([
             {
@@ -87,7 +92,7 @@ function start() {
 
 //VIEW ALL ROLES
 function viewRoles() {
-    connection.query(`SELECT r.title AS 'Role', d.name AS 'Department', r.salary AS 'Salary'
+    connection.query(`SELECT r.title AS 'Role', d.department_name AS 'Department', r.salary AS 'Salary'
                       FROM employee_role r
                       JOIN department d
                       ON r.department_id = d.id
@@ -96,17 +101,17 @@ function viewRoles() {
                           if (err) throw err;
                           console.log('\n')
                           console.table(res);
-                          init();
+                          startHome();
                       });
 }
 
 //VIEW ALL DEPARTMENTS
 function viewDepart() {
-    connection.query(`SELECT name AS 'Departments' FROM department`, (err, res) => {
+    connection.query(`SELECT department_name AS 'Departments' FROM department`, (err, res) => {
         if (err) throw err;
         console.log('\n')
         console.table(res);
-        init();
+        startHome();
     });
 }
 //VIEW ALL EMPLOYEES AND SORT BY MANAGER, LAST NAME, AND DEPT
@@ -117,12 +122,12 @@ function viewEmployees() {
             name: 'sortBy',
             type: 'list',
             message: 'How would you like to sort your employees?',
-            choices: ['Last name', 'Manager', 'Department']
+            choices: ['View All', 'Manager', 'Department']
         }
     ]).then((answers) => {
         switch(answers.sortBy) {
-            case 'Last Name':
-                sortByLastName();
+            case 'View All':
+                viewAllEmployees();
                 break;
             case 'Manager':
                 sortByManager();
@@ -134,18 +139,18 @@ function viewEmployees() {
     })
 }
 
-function sortByLastName() {
-connection.query(`SELECT e.last_name AS 'Last Name', e.first_name AS 'First Name', r.title AS 'Role', d.name AS 'Department'
+function viewAllEmployees() {
+connection.query(`SELECT e.id
                   FROM employee e
-                  JOIN employee_roles r
+                  JOIN employee_role r
                   ON e.role_id = r.id
                   LEFT JOIN department d
                   ON r.department_id = d.id
-                  ORDER BY e.last_name`, (err, res) => {
+                  `, (err, res) => {
                     if (err) throw err;
                     console.log('\n')
                     console.table(res);
-                    init();
+                    startHome();
                   });
 
 }
@@ -157,15 +162,15 @@ function sortByManager() {
                       ON e.manager_id = m.id
                       ORDER BY m.last_name, e.last_name`, (err, res) => {
                         if (err) throw err;
-                        console.log('\n\n')
+                        console.log('\n')
                         console.table(res);
-                        init();
+                        startHome();
     });
 
 }
 
 function sortByDepartment() {
-    connection.query(`SELECT d.name AS 'Department', e.last_name AS 'Last Name', e.first_name AS 'First Name', r.title AS 'Role'
+    connection.query(`SELECT d.department_name AS 'Department', e.last_name AS 'Last Name', e.first_name AS 'First Name', r.title AS 'Role'
                       FROM employee e
                       JOIN employee_role r
                       ON e.role_id = r.id
@@ -175,7 +180,7 @@ function sortByDepartment() {
                         if (err) throw err;
                         console.log('\n\n')
                         console.table(res);
-                        init();
+                        startHome();
     });
 }
 
@@ -208,10 +213,10 @@ function addDepart() {
 }
 
 function insertDept(newDept) {
-    connection.query('INSERT INTO departments SET ?', new Department(newDept), (err, res) => {
+    connection.query('INSERT INTO department SET ?', new Department(newDept), (err, res) => {
         if (err) throw err;
         console.log(`Successfully added ${newDept} to Departments`);
-        init();
+        startHome();
     });
 }
 
@@ -275,10 +280,10 @@ function addRole() {
 }
 
 function insertRole(title, salary, department_id) {
-    connection.query('INSERT INTO roles SET ?', new Role(title, salary, department_id), (err, res) => {
+    connection.query('INSERT INTO employee_role SET ?', new Role(title, salary, department_id), (err, res) => {
         if (err) throw err;
         console.log(`Successfully added ${title} to Employee Roles`);
-        init();
+        startHome();
     });
 
 }
@@ -380,9 +385,10 @@ function insertEmployee(firstName, lastName, roleId, managerId) {
     connection.query('INSERT INTO employee SET ?', new Employee(firstName, lastName, roleId, managerId), (err, res) => {
         if (err) throw err;
         console.log(`Successfully added ${firstName} ${lastName} to Employees`);
-        init();
+        startHome();
     });
 }
+
 
 
 
@@ -448,7 +454,7 @@ function updateEmployeeQuestions(rolesData, rolesNames, employeesData, employees
             employeesNames.push('No Manager');
             getManagerId(employeeId, employeesData, employeesNames)
         } else {
-            init();
+            startHome();
         }
     })
 }
@@ -485,7 +491,7 @@ function updateEmployeeRole(employeeId, roleId) {
     (err, res) => {
         if (err) throw err;
         console.log(`Employee's role has successfully been updated`);
-        init();
+        startHome();
     })
 }
 
@@ -524,7 +530,7 @@ function updateEmployeeManager(employeeId, managerId) {
     (err, res) => {
         if (err) throw err;
         console.log(`Employee's manager has successfully been updated`);
-        init();
+        startHome();
     })
 }
 
@@ -572,7 +578,7 @@ function deleteEmployeeQuestions(employeesData, employeesNames) {
             }
             deleteEmployeeFromDb(employeeId, answers.name);
         } else {
-            init();
+            startHome();
         }
     })
 }
@@ -581,7 +587,7 @@ function deleteEmployeeFromDb(employeeId, name) {
     connection.query(`DELETE FROM employee WHERE ?`, {id: employeeId}, (err, res) => {
         if (err) throw err;
         console.log(` ${name} has successfully been removed from the database.`);
-        init();
+        startHome();
     })
 }
 
@@ -625,7 +631,7 @@ function deleteRoleQuestions(rolesData, rolesNames) {
             }
             deleteRoleFromDb(roleId, answers.name);
         } else {
-            init();
+            startHome();
         }
     })
 }
@@ -634,7 +640,7 @@ function deleteRoleFromDb(roleId, name) {
     connection.query(`DELETE FROM employee_role WHERE ?`, {id: roleId}, (err, res) => {
         if (err) throw err;
         console.log(` ${name} has been successfully deleted from the database.`);
-        init();
+        startHome();
     })
 }
 
@@ -679,7 +685,7 @@ function deleteDepartQuestions(departData, departNames) {
             }
             deleteDepartFromDb(departId, answers.name);
         } else {
-            init();
+            startHome();
         }
     });
 }
@@ -688,7 +694,7 @@ function deleteDepartFromDb(departId, name) {
     connection.query(`DELETE FROM department WHERE ?`, {id: departId}, (err, res) => {
         if (err) throw err;
         console.log(` ${name} has been successfully deleted from the database.`);
-        init();
+        startHome();
     })
 }
 
@@ -712,7 +718,7 @@ function getEmployeesAsync() {
 
 function getRolesAsync() {
     return new Promise((resolve, reject) => {
-        connection.query(`SELECT id, title AS 'role' FROM employee_roles ORDER BY role`, (err, data) => {
+        connection.query(`SELECT id, title AS 'role' FROM employee_role ORDER BY role`, (err, data) => {
             if (err) {
                 return reject(err);
             }
@@ -805,5 +811,5 @@ function calcDepartBudget(data, name) {
     departBudget = departBudget.toFixed(2);
     departBudget = commaNumber(departBudget);
     console.log(`\nThe budget for ${name} is $${departBudget}`);
-    init();
+    startHome();
 }
