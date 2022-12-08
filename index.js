@@ -43,6 +43,7 @@ function startHome() {
                     'Delete Department',
                     'Delete Employee',
                     'Delete Employee Role',
+                    'View Budget',
                     'Exit'
                 ]
 
@@ -79,6 +80,9 @@ function startHome() {
                     break;
                 case 'Delete Employee Role' :
                     deleteRole();
+                    break;
+                case 'View Budget' :
+                    viewBudget();
                     break;
 
                 
@@ -751,70 +755,15 @@ function getDepartAsync() {
 // DEPT BUDGET QUERY //
 //------------------//
 
-(`SELECT r.salary
-FROM employee e
-JOIN employee_role r
-ON e.role_id = r.id
-JOIN department d
-ON r.department_id = d.id 
-WHERE d.id = 1`)
-
-function viewDepartBudget() {
-    const departData = [];
-    const departNames = [];
-    getDepartAsync()
-    .then(data => {
-        for (let i = 0; i < data.length; i++) {
-            departData.push(data[i]);
-            departNames.push(data[i].name);
-        }
-        viewBudgetQuestions(departData, departNames);
-    }).catch(err => {
-        console.log(err);
-    });
-}
-
-function viewBudgetQuestions(departData, departNames) {
-    inquirer.prompt([
-        {
-            type: 'list',
-            name: 'name',
-            message: 'Which department would you like to see the budget for?',
-            choices: departNames
-        }
-    ]).then(answers => {
-        let departId;
-        for (let i = 0; i < departData.length; i++) {
-            if (answers.name === departData[i].name) {
-                departId = departData[i].id;
-            }
-        }
-        getDepartBudget(departId, answers.name);
-    });
-}
-
-function getDepartBudget(departId, name) {
-    connection.query(`SELECT r.salary
-                      FROM employee e
-                      JOIN employee_role r
-                      ON e.role_id = r.id
-                      JOIN department d
-                      ON r.department_id = d.id 
-                      WHERE ?`, {'d.id': departId}, 
-                      (err, data) => {
-                            if (err) throw err;
-                            calcDepartBudget(data, name);
-                      });
-}
-
-
-function calcDepartBudget(data, name) {
-    let departBudget = 0;
-    for (let i = 0; i < data.length; i++) {
-        departBudget += data[i].salary;
-    }
-    departBudget = departBudget.toFixed(2);
-    departBudget = commaNumber(departBudget);
-    console.log(`\nThe budget for ${name} is $${departBudget}`);
-    startHome();
-}
+function viewBudget() {
+    connection.query(`SELECT d.department_name AS 'Department', SUM()
+                  FROM employee_role r
+                  JOIN department d
+                  ON r.department_id = d.id
+                  `, (err, res) => {
+                    if (err) throw err;
+                    console.log('\n')
+                    console.table(res);
+                    startHome();
+                  });
+  }
