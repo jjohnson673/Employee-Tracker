@@ -5,7 +5,7 @@ const cTable = require('console.table');
 const inquirer = require('inquirer');
 const Employee = require(__dirname + '/db/employeeconnect.js')
 const Role = require(__dirname + '/db/employeeconnect.js')
-const Department = require(__dirname + '/db/employeeconnect.js')
+//const Department = require(__dirname + '/db/employeeconnect.js')
 require('dotenv').config();
 
 
@@ -197,6 +197,19 @@ function sortByDepartment() {
 //-----------//
 
 //ADD DEPARTMENT
+class Department {
+    constructor(name){
+        this.name = name;
+    }
+}
+
+function insertDept(newDept) {
+    connection.query('INSERT INTO department (department_name) SET ?', new Department(newDept), (err, res) => {
+        if (err) throw err;
+        console.log(`Successfully added ${newDept} to Departments`);
+        startHome();
+    });
+}
 
 function addDepart() {
     inquirer.prompt([
@@ -221,13 +234,13 @@ function addDepart() {
 }
 
 
-function insertDept(newDept) {
-    connection.query('INSERT INTO department SET ?', new Department(newDept), (err, res) => {
-        if (err) throw err;
-        console.log(`Successfully added ${newDept} to Departments`);
-        startHome();
-    });
-}
+// function insertDept(newDept) {
+//     connection.query('INSERT INTO department SET ?', new Department(newDept), (err, res) => {
+//         if (err) throw err;
+//         console.log(`Successfully added ${newDept} to Departments`);
+//         startHome();
+//     });
+// }
 
 //ADD ROLE
 function addRole() {
