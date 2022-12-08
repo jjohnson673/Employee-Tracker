@@ -8,7 +8,7 @@ class Employee {
 }
 
 
-class Department{
+class Department {
     constructor(name){
         this.name = name;
     }

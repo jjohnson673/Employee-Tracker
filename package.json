@@ -10,15 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "inquirer": "^8.2.4",
-    "asciiart-logo": "^0.2.6",
+    "asciiart-logo": "^0.2.7",
     "console.table": "^0.10.0",
-    "mysql2": "^2.1.0"
+    "dotenv": "^16.0.3",
+    "inquirer": "^8.2.4",
+    "mysql2": "^2.1.0",
+    "sequelize": "^6.3.5"
   }
 }
-
-
-
-
-
-

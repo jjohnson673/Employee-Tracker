@@ -6,17 +6,21 @@ const inquirer = require('inquirer');
 const Employee = require(__dirname + '/db/employeeconnect.js')
 const Role = require(__dirname + '/db/employeeconnect.js')
 const Department = require(__dirname + '/db/employeeconnect.js')
+require('dotenv').config();
 
 
 
+const connection = mysql.createConnection(
+ {
+  host: 'localhost',
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+}
+);
 
-//CONNECTIONS
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'UNCChapelHillCoding123!',
-    database: 'employeeTracker_db'
-});
+
+
 
 startHome();
 
@@ -140,7 +144,7 @@ function viewEmployees() {
 }
 
 function viewAllEmployees() {
-connection.query(`SELECT e.id
+connection.query(`SELECT e.id AS 'Employee ID', e.first_name AS 'First Name', e.last_name AS 'Last Name', r.title AS 'Role', r.salary AS 'Salary', d.department_name AS 'Department', e.manager_id AS 'Manager ID'
                   FROM employee e
                   JOIN employee_role r
                   ON e.role_id = r.id
@@ -170,13 +174,13 @@ function sortByManager() {
 }
 
 function sortByDepartment() {
-    connection.query(`SELECT d.department_name AS 'Department', e.last_name AS 'Last Name', e.first_name AS 'First Name', r.title AS 'Role'
+    connection.query(`SELECT d.department_name AS 'Department', e.first_name AS 'First Name', e.last_name AS 'Last Name', r.title AS 'Role'
                       FROM employee e
                       JOIN employee_role r
                       ON e.role_id = r.id
                       LEFT JOIN department d
                       ON r.department_id = d.id
-                      ORDER BY d.name, e.last_name`, (err, res) => {
+                      ORDER BY d.department_name, e.last_name`, (err, res) => {
                         if (err) throw err;
                         console.log('\n\n')
                         console.table(res);
@@ -211,6 +215,7 @@ function addDepart() {
         insertDept(answers.name);
     });
 }
+
 
 function insertDept(newDept) {
     connection.query('INSERT INTO department SET ?', new Department(newDept), (err, res) => {
