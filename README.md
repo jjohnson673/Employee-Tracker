@@ -39,8 +39,11 @@ This project does require the following NPM Packages:
 *console.table
 
 ## Demonstration
+To view a video on the usage of the application, [click here](https://app.castify.com/view/6b99fcba-5166-404c-8f47-c484969f1440)
 
+Please note, as you will see in the demonstration video -- there are some segments of this application that are currently still under construction.
 ## License
+MIT
 
 ## Contact
 For any questions, please contact me at jkjohnson673@gmail.com
